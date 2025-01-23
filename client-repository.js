@@ -74,4 +74,31 @@ export class ClientRepository {
     static obtenerUsuarios() {
         return Client.find();
     }
+
+    static actualizarCreditos(idCredit, monto, DPI) {
+        const user = Client.findOne({ dpi: DPI });
+        if (!user) {
+            throw new Error('User not found');
+        }
+        const credits = user.credits;
+        const credit = credits.find(credit => credit._id.toString() === idCredit.toString());
+        
+        if (!credit) {
+            throw new Error('Credit not found');
+        }
+        
+        // Actualizar el monto del crédito
+        credit.Total = credit.Total - monto;
+         user.save();
+        
+        return true;
+    }
+
+    static obtenerCreditosPorUsuario(DPI) {
+        const user = Client.findOne({ dpi: DPI });
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return user.credits;
+    }
 }

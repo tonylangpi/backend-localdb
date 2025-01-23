@@ -61,6 +61,30 @@ app.get("/clients", (req,res) => {
    
 });
 
+app.get("/creditsClient/:DPI", async (req, res) => {
+    const { DPI } = req.params;
+    try {
+        const client = await ClientRepository.obtenerCreditosPorUsuario(DPI);
+        if (client) {
+            res.status(200).json(client);
+        } else {
+            res.status(200).json({ message: "No se encontro usuario con ese DPI" });
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.post("/update", (req,res) => {
+    const {idCredit, monto, DPI} = req.body;
+    try {
+        const client = ClientRepository.actualizarCreditos(idCredit, monto, DPI);
+        res.status(200).json({message: client});
+    } catch (error) {
+        res.status(400).json({error: error.message});
+    }
+});
+
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
