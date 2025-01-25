@@ -78,10 +78,22 @@ app.get("/creditsClient/:DPI", async (req, res) => {
     }
 });
 
-app.post("/update", (req,res) => {
-    const {idCredit, monto, DPI} = req.body;
+app.post("/update", async(req,res) => {
+    const {idCredit, monto, DPI, email} = req.body;
     try {
         const client = ClientRepository.actualizarCreditos(idCredit, monto, DPI);
+        const infoClient = ClientRepository.obtenerUsuario(DPI);
+        const htmlContent = `<b>
+        Info Cliente: ${infoClient.name}  ${infoClient.lastname} con dpi ${DPI},
+        Ha pagado el monto de ${monto} en su crédito
+       </b>`;
+       const info = await transporter.sendMail({
+           from: 'Bantrab <2020-010432@intecap.edu.gt>',
+           to: email, // Usando el correo electrónico del destinatario proporcionado
+           subject: "Pago de Crédito Comprobante ✔",
+           html: htmlContent,
+       });
+       console.log(info)
         res.status(200).json({message: client});
     } catch (error) {
         res.status(400).json({error: error.message});
