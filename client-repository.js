@@ -11,6 +11,7 @@ const Client = Schema('Client', {
     celphone: { type: String },
     photo: { type: String },
     dpi: { type: String },
+    email: { type: String },
     credits:{ type: Array, default: [
         {
             _id: { type: String },
@@ -24,7 +25,7 @@ const Client = Schema('Client', {
 });
 
 export class ClientRepository {
-    static crearUsuario({ name, lastname, age, celphone, photo, dpi, credits }) {
+    static crearUsuario({ name, lastname, age, celphone, photo, dpi,email, credits }) {
        // Validar si el cliente ya existe
        const existingUser = Client.findOne({ dpi });
        if (existingUser) {
@@ -60,6 +61,7 @@ export class ClientRepository {
            celphone,
            photo,
            dpi,
+           email,
            credits: mappedCredits, // Guardar los créditos como array genérico
        }).save();
 
@@ -100,5 +102,19 @@ export class ClientRepository {
             throw new Error('User not found');
         }
         return user.credits;
+    }
+
+    static searchCreditById(idCredit, DPI) {
+        const user = Client.findOne({ dpi: DPI });
+        if (!user) {
+            throw new Error('User not found');
+        }
+        const credits = user.credits;
+        const credit = credits.find(credit => credit._id.toString() === idCredit.toString());
+        
+        if (!credit) {
+            throw new Error('Credit not found');
+        }
+        return credit;
     }
 }

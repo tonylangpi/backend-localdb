@@ -2,6 +2,8 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import {ClientRepository} from "./client-repository.js";
+import {transporter} from "./transportmailer.js"
+
 
 
 const app = express();
@@ -25,10 +27,11 @@ app.post("/createClient", (req,res) => {
     celphone,
     photo,
     dpi,
+    email,
     credits} = req.body;
 
     try {
-        const cliente = ClientRepository.crearUsuario({name, lastname, age, celphone, photo, dpi, credits});
+        const cliente = ClientRepository.crearUsuario({name, lastname, age, celphone, photo, dpi, email, credits});
         res.send("creado");
     } catch (error) {
         res.status(400).json({error: error.message});
@@ -80,6 +83,31 @@ app.post("/update", (req,res) => {
     try {
         const client = ClientRepository.actualizarCreditos(idCredit, monto, DPI);
         res.status(200).json({message: client});
+    } catch (error) {
+        res.status(400).json({error: error.message});
+    }
+});
+
+app.post("/emailAgent", async(req,res) => {
+    const {email, creditNumber, DPI, Message} = req.body;
+    
+    try {
+        const credit = ClientRepository.searchCreditById(creditNumber, DPI);
+        const client = ClientRepository.obtenerUsuario(DPI);
+        const htmlContent = `<b>
+         El cliente ${client.name}  ${client.lastname} con dpi ${DPI},
+         te ha contactado para revision de su credito, el mensaje del cliente es el siguiente:
+         ${Message}
+        </b>
+        <h3>Contacta con el cliente por medio telefonico: ${client.celphone}</h3>`;
+        const info = await transporter.sendMail({
+            from: 'Bantrab <2020-010432@intecap.edu.gt>',
+            to: email, // Usando el correo electrónico del destinatario proporcionado
+            subject: "Derivar caso Agente ✔",
+            html: htmlContent,
+        });
+        res.status(200).json({status: true})
+        //res.status(200).json({message: client});
     } catch (error) {
         res.status(400).json({error: error.message});
     }
