@@ -12,6 +12,7 @@ const Client = Schema('Client', {
     photo: { type: String },
     dpi: { type: String },
     email: { type: String },
+    token: {type: String },
     credits:{ type: Array, default: [
         {
             _id: { type: String },
@@ -116,5 +117,28 @@ export class ClientRepository {
             throw new Error('Credit not found');
         }
         return credit;
+    }
+    static generateToken(DPI){
+        const user = Client.findOne({ dpi: DPI });
+        if (!user) {
+            throw new Error('User not found');
+        }
+        user.token = crypto.randomBytes(16).toString('hex');
+        user.save();
+
+        return user.token
+
+    }
+    static validateToken(DPI,TOKEN){
+        const user = Client.findOne({ dpi: DPI });
+        console.log(user)
+        if (!user) {
+            return false;
+        }
+        if(user.token === TOKEN){
+            return user
+        }else{
+            return false;
+        }
     }
 }

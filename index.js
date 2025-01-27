@@ -3,6 +3,8 @@ import morgan from "morgan";
 import cors from "cors";
 import {ClientRepository} from "./client-repository.js";
 import {transporter} from "./transportmailer.js"
+import { whatsapp } from "./libs/whatsappconfig.js";
+import crypto from 'crypto';
 
 
 
@@ -12,6 +14,8 @@ app.use(express.static("public"));
 app.use(cors()); 
 app.use(morgan("dev"));
 app.use(express.json());
+
+whatsapp.initialize();
 
 
 app.get("/client", (req,res) => {
@@ -44,6 +48,29 @@ app.get("/client/:DPI", async (req, res) => {
     try {
         const client = await ClientRepository.obtenerUsuario(DPI);
         if (client) {
+            const chatId = client.celphone.substring(1) + "@c.us";
+            const number_details = await whatsapp.getNumberId(chatId);
+            if(number_details){
+               //const tokenGenerated = ClientRepository.generateToken(DPI)
+              const mensaje = `hola bienvenido tu token es ${client.dpi}`
+              await whatsapp.sendMessage(chatId, mensaje);
+              res.status(200).json(client);
+            }else{
+               res.status(200).json(client);
+            }
+        } else {
+            res.status(200).json({ message: "No se encontro usuario con ese DPI" });
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.get("/clientHome/:DPI", async (req, res) => {
+    const { DPI } = req.params;
+    try {
+        const client = await ClientRepository.obtenerUsuario(DPI);
+        if (client) {
             res.status(200).json(client);
         } else {
             res.status(200).json({ message: "No se encontro usuario con ese DPI" });
@@ -52,6 +79,23 @@ app.get("/client/:DPI", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+
+app.get("/validateToken", async (req,res)=>{
+     const {DPI, TOKEN} = req.body
+    try {
+        console.log(DPI)
+        const validate = ClientRepository.validateToken(DPI,TOKEN);
+        console.log("desde la ruta", validate)
+        if(validate === false){
+           res.status(200).json(validate)
+        }else{
+            res.status(200).json(validate)
+        }
+        
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+})
 
 app.get("/clients", (req,res) => {
     try {
